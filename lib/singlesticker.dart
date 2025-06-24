@@ -1,0 +1,320 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
+
+class SingleStickerWidget extends StatefulWidget {
+  const SingleStickerWidget({super.key});
+
+  @override
+  State<SingleStickerWidget> createState() => _SingleStickerWidgetState();
+}
+
+class _SingleStickerWidgetState extends State<SingleStickerWidget> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _employeeController = TextEditingController();
+  bool _isPrinting = false;
+  DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime.now();
+  }
+
+  String formatDutchDate(DateTime date) {
+    const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+    const dutchMonths = [
+      'Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'
+    ];
+    
+    final dayName = dutchDays[date.weekday - 1];
+    final day = date.day.toString().padLeft(2, '0');
+    final month = dutchMonths[date.month - 1];
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    
+    return '$dayName $day $month $hour:$minute';
+  }
+
+  Future<int> printLabel(String naam, DateTime wegOpDatum, String medewerker) async {
+    final String formattedDate = formatDutchDate(wegOpDatum);
+    final String wegOpTekst = "Weg op:";
+    final result = await Process.run(
+      'python',
+      [
+        'print.py',
+        naam,
+        formattedDate,
+        wegOpTekst,
+        medewerker
+      ],
+    );
+    return result.exitCode;
+  }
+  Future<void> _selectDate(BuildContext context) async {
+  final datum = await showDatePicker(
+    context: context,
+    initialDate: _selectedDate,
+    firstDate: DateTime(2020),
+    lastDate: DateTime(2030),
+  );
+
+  if (datum != null) {
+    final tijd = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+    );
+
+    if (tijd != null) {
+      setState(() {
+        _selectedDate = DateTime(
+          datum.year,
+          datum.month,
+          datum.day,
+          tijd.hour,
+          tijd.minute,
+        );
+      });
+    } else {
+      // Only update the date if time picker was canceled
+      setState(() {
+        _selectedDate = DateTime(
+          datum.year,
+          datum.month,
+          datum.day,
+          _selectedDate.hour,
+          _selectedDate.minute,
+        );
+      });
+    }
+  }
+}
+
+  Future<void> _printSticker() async {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vul eerst een productnaam in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_employeeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vul eerst een medewerker in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isPrinting = true;
+    });
+
+    try {
+      final int exitCode = await printLabel(
+        _nameController.text.trim(),
+        _selectedDate,
+        _employeeController.text.trim(),
+      );
+
+      if (exitCode == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sticker voor "${_nameController.text}" succesvol geprint'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Clear the form after successful print
+        _nameController.clear();
+        _selectedDate = DateTime.now();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fout bij printen (exit code: $exitCode)'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fout bij printen: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    setState(() {
+      _isPrinting = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+           Text(
+              'HACCP Sticker',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          const SizedBox(height: 10),
+          Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.grey[400]!, width: 2),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 40,),
+                  TextField(
+                    controller: _nameController,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Productnaam...',
+                      hintStyle: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  
+                  // Divider line
+                  Container(
+                    height: 1,
+                    color: Colors.grey[300],
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  
+                  // "Weg op:" label
+                  const Text(
+                    'Weg op:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 4),
+                  
+                  // Date - clickable
+                  InkWell(
+                    onTap: () => _selectDate(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.transparent),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            formatDutchDate(_selectedDate),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                 
+                  TextField(
+                    controller: _employeeController,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Medewerker...',
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 10),
+          // Print button
+          SizedBox(
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: _isPrinting ? null : _printSticker,
+              icon: _isPrinting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.print, size: 18),
+              label: Text(
+                _isPrinting ? 'Printen...' : 'Print Sticker',
+                style: const TextStyle(fontSize: 14),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isPrinting ? Colors.grey : Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _employeeController.dispose();
+    super.dispose();
+  }
+}
