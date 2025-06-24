@@ -66,15 +66,7 @@ class LabelPrinterService {
       
       // PPLB commando voor het label (58mm breed label)
       String pplbCommand = '''
-{D0465,0800,0450|}
-{C|}
-{PC000;0030,0050,12,12,L|$productName}
-{L;0030,0130,0400,0001,1|}
-{PC001;0030,0150,10,10,L|Weg op:}
-{PC002;0030,0200,12,12,L|$wegOp}
-{PC003;0350,0350,10,10,4|$medewerkername}
-{PC004;0380,0350,8,8,4|$currentDate $currentTime}
-{XS;I,0001,0002C|}
+"A50,30,0,1,1,1,N,\"This is font 1.\""
 ''';
       
       await _printer.sendPPLB(pplbCommand);
