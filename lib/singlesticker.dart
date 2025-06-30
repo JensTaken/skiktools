@@ -136,7 +136,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Fout bij printen (exit code: $exitCode)'),
+            content: Text('Die tering printer doet het niet (exit code: $exitCode)'),
             backgroundColor: Colors.red,
           ),
         );
@@ -144,7 +144,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Fout bij printen: $e'),
+          content: Text('Die tering printer doet het niet: $e'),
           backgroundColor: Colors.red,
         ),
       );

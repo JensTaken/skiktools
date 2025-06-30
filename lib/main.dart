@@ -47,7 +47,7 @@ class ResponsiveLayout extends StatelessWidget {
         builder: (context, constraints) {
           // Breakpoint for switching between grid and list
           // You can adjust this value based on your needs
-          if (constraints.maxWidth > 840) {
+          if (constraints.maxWidth > 870) {
             // Grid layout for larger screens - 2 widgets left, 1 large widget right
             return Padding(
               padding: const EdgeInsets.all(16.0),

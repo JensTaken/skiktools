@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:flutter/services.dart';
+
 class TemperatureLoggerPage extends StatefulWidget {
   const TemperatureLoggerPage({super.key});
 
@@ -65,7 +67,7 @@ class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
             Align(
               alignment: Alignment.centerLeft,
               child:  Text(
-              'Genereer Temperatuurmetingen',
+              'Koeldingetjes',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -154,14 +156,13 @@ class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
             ),
             
             const SizedBox(height: 20),
-            
-            // Copy button
             if (_resultController.text.isNotEmpty)
               SizedBox(
                 height: 50,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Copy to clipboard functionality would go here
+                    // Copy the result to clipboard
+                    Clipboard.setData(ClipboardData(text: _resultController.text));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Tekst gekopieerd naar klembord'),

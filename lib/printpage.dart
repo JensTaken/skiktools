@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class PrintPage extends StatefulWidget {
@@ -10,6 +11,7 @@ class PrintPage extends StatefulWidget {
 }
 
 class _PrintPageState extends State<PrintPage> {
+  static const String _printCountPrefix = 'print_count_';
   final List<Map<String, dynamic>> basisProducten = [
     {"naam": "Brood", "dagen": 1, "bediening": false},
     {"naam": "Burger brood", "dagen": 1, "bediening": false},
@@ -17,12 +19,12 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Kruidenboter", "dagen": 10, "bediening": false},
     {"naam": "Gegr. Champ", "dagen": 4, "bediening": false},
     {"naam": "Cheddar geraspt", "dagen": 7, "bediening": false},
-    {"naam": "Mozazarella", "dagen": 5, "bediening": false},
+    {"naam": "Mozzarella", "dagen": 5, "bediening": false},
     {"naam": "Serranoham", "dagen": 7, "bediening": false},
     {"naam": "Oosters plateau", "dagen": 60, "bediening": false},
     {"naam": "Wakame", "dagen": 2, "bediening": false},
     {"naam": "Chilisaus", "dagen": 27, "bediening": false},
-    {"naam": "Carpaccio ontdooit", "dagen": 2, "bediening": false},
+    {"naam": "Carpaccio ontdooid", "dagen": 2, "bediening": false},
     {"naam": "Carpaccio kaas", "dagen": 7, "bediening": false},
     {"naam": "Gefrituurde uitjes", "dagen": 20, "bediening": false},
     {"naam": "Zongedroogde tomaat", "dagen": 7, "bediening": false},
@@ -67,10 +69,10 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Augurk", "dagen": 7, "bediening": false},
     {"naam": "Bacon", "dagen": 7, "bediening": false},
     {"naam": "Creamy baconsaus", "dagen": 27, "bediening": false},
-    {"naam": "Kipburgers", "dagen": 1, "bediening": false},
+    {"naam": "Kipburgers", "dagen": 33, "bediening": false},
     {"naam": "Tzatziki", "dagen": 5, "bediening": false},
     {"naam": "Avocado burgers", "dagen": 33, "bediening": false},
-    {"naam": "Smockey hemp saus", "dagen": 29, "bediening": false},
+    {"naam": "Smokey hemp saus", "dagen": 29, "bediening": false},
     {"naam": "Ham", "dagen": 2, "bediening": false},
     {"naam": "Kaas", "dagen": 2, "bediening": false},
     {"naam": "Eiersalade", "dagen": 4, "bediening": false},
@@ -94,17 +96,43 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Munt", "dagen": 4, "bediening": true},
     {"naam": "Melk", "dagen": 3, "bediening": true},
     {"naam": "Macarons", "dagen": 5, "bediening": true},
+    {"naam": "Pancakes", "dagen": 15, "bediening": false},
+    {"naam": "Peterselie", "dagen": 1, "bediening": false},
+    {"naam": "China rose", "dagen": 1, "bediening": false},
+    {"naam": "Espresso Martini", "dagen": 30, "bediening": true},
+    {"naam": "Pornstar Martini", "dagen": 30, "bediening": true},
   ];
   
   final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva"];
   String geselecteerdeMedewerker = "";
   final List<Map<String, dynamic>> printLijst = [];
-  bool isPrinting = false; // Prevent double printing
+  bool isPrinting = false;
+  bool? bediening = false;
+
+  Future<int> getPrintCount(String productName) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('$_printCountPrefix$productName') ?? 0;
+  }
+
+  Future<void> incrementPrintCount(String productName) async {
+    final item = printLijst.firstWhere((item) => item['naam'] == productName);
+    if (item != {}) {
+      item['printCount'] = (item['printCount'] as int) + 1;
+    } 
+    final prefs = await SharedPreferences.getInstance();
+    final currentCount = prefs.getInt('$_printCountPrefix$productName') ?? 0;
+    await prefs.setInt('$_printCountPrefix$productName', currentCount + 1);
+  }
 
   @override
   void initState() {
     super.initState();
-    // Voeg alle basis producten toe aan de printlijst
+    sortOnPrintcount();
+    medewerkers.shuffle();
+    geselecteerdeMedewerker = medewerkers.first;
+  }
+
+  Future<void> sortOnPrintcount() async{
     for (var product in basisProducten) {
       printLijst.add({
         'naam': product['naam'],
@@ -112,13 +140,16 @@ class _PrintPageState extends State<PrintPage> {
         'gevinkt': false,
         'standaardDagen': product['dagen'],
         'aantal': 1,
-        'parentIndex': null, // Voor het tracken van parent-child relaties
+        'bediening': product['bediening'] ?? false,
+        'parentIndex': null,
+        'printCount': await getPrintCount(product['naam']),
       });
     }
-    medewerkers.shuffle();
-    geselecteerdeMedewerker = medewerkers.first; // Standaard medewerker
+    
+    setState(() {
+      printLijst.sort((a, b) => (b['printCount'] as int).compareTo(a['printCount'] as int));
+    });
   }
-
   String formatDutchDate(DateTime date) {
     const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
     const dutchMonths = [
@@ -153,7 +184,7 @@ class _PrintPageState extends State<PrintPage> {
   }
 
   Future<void> bulkPrint() async {
-    if (isPrinting) return; // Prevent double printing
+    if (isPrinting) return; 
     setState(() {
       isPrinting = true;
     });
@@ -162,7 +193,7 @@ class _PrintPageState extends State<PrintPage> {
     if (gevinkteItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Geen items geselecteerd om te printen'),
+          content: Text('Ben je kaulo dom ofz? Selecteer eerst items om te printen daggoe!'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -177,26 +208,25 @@ class _PrintPageState extends State<PrintPage> {
     try {
       for (var item in gevinkteItems) {
         final aantal = item['aantal'] as int;
-        
-        // Print multiple labels based on quantity
         for (int i = 0; i < aantal; i++) {
+          await incrementPrintCount(item['naam']);
           var code = await printLabel(item['naam'], item['wegOpDatum'], geselecteerdeMedewerker);
           if (code != 0) {
-            throw Exception('Fout bij printen van ${item['naam']}: $code');
+            throw Exception('Kon ${item['naam']} niet printen: $code');
           }
         }
         totalLabels += aantal;
       }
 
-      // Uncheck geprinte items maar laat ze in de lijst staan
       setState(() {
         for (var item in printLijst) {
           if (item['gevinkt'] == true) {
             item['gevinkt'] = false;
           }
         }
+        printLijst.sort((a, b) => (b['printCount'] as int).compareTo(a['printCount'] as int));
       });
-
+  
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('✅ $totalLabels labels succesvol geprint!'),
@@ -204,10 +234,9 @@ class _PrintPageState extends State<PrintPage> {
         ),
       );
     } catch (e) {
-      print(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Fout bij printen: ${e.toString()}'),
+          content: Text('❌ Die tering printer doet het niet: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -388,6 +417,33 @@ class _PrintPageState extends State<PrintPage> {
     );
   }
 
+  Future<void> filterBediening(bool? value) async{
+     for (var product in basisProducten) {
+          printLijst.add({
+            'naam': product['naam'],
+            'wegOpDatum': DateTime.now().add(Duration(days: product['dagen'])),
+            'gevinkt': false,
+            'standaardDagen': product['dagen'],
+            'aantal': 1,
+            'bediening': product['bediening'] ?? false,
+            'parentIndex': null,
+            'printCount': await getPrintCount(product['naam']),
+            });
+           }
+    if (value == false) {
+      sortOnPrintcount();
+    }
+    setState(() {
+        bediening = value;
+        if (value == true) {
+          printLijst.retainWhere((item) => item['bediening'] == true);
+        } else {
+          printLijst.clear();
+        }
+      });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -431,7 +487,7 @@ class _PrintPageState extends State<PrintPage> {
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       value: geselecteerdeMedewerker,
@@ -452,6 +508,11 @@ class _PrintPageState extends State<PrintPage> {
                           .toList(),
                       onChanged: (value) {
                         if (value != null) {
+                          if (value == "Bediening") {
+                            filterBediening(true);
+                          } else {
+                            filterBediening(false);
+                          }
                           setState(() {
                             geselecteerdeMedewerker = value;
                           });
@@ -459,7 +520,25 @@ class _PrintPageState extends State<PrintPage> {
                       },
                     ),
                   ),
-                ],
+                  const SizedBox(width: 16),
+                  geselecteerdeMedewerker == "Bediening" ? const Text(
+                    'Filter',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                  ) : SizedBox(),
+                  SizedBox(width: 10,),
+                  geselecteerdeMedewerker == "Bediening" ? Checkbox(
+                    shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                    value: bediening,
+                    onChanged: (bool? value) {
+                      filterBediening(value);
+                    },
+                  ) : SizedBox(),
+                  ],
               ),
             ),
             const SizedBox(height: 16),
@@ -480,7 +559,7 @@ class _PrintPageState extends State<PrintPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color: item['gevinkt'] ? Colors.blue[300]! : Colors.transparent,
+                          color: item['gevinkt'] ? Colors.grey[700]! : Colors.transparent,
                           width: 2,
                         ),
                       ),
@@ -498,7 +577,6 @@ class _PrintPageState extends State<PrintPage> {
                                     printLijst[index]['gevinkt'] = value ?? false;
                                   });
                                 },
-                                activeColor: Colors.blue[600],
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -524,7 +602,7 @@ class _PrintPageState extends State<PrintPage> {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: const Text(
-                                            'EXTRA',
+                                            'ANDERE DATUM',
                                             style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
