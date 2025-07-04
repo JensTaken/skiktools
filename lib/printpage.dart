@@ -24,7 +24,7 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Oosters plateau", "dagen": 60, "bediening": false},
     {"naam": "Wakame", "dagen": 2, "bediening": false},
     {"naam": "Chilisaus", "dagen": 27, "bediening": false},
-    {"naam": "Carpaccio ontdooid", "dagen": 2, "bediening": false},
+    {"naam": "Carpaccio", "dagen": 2, "bediening": false, "vriezerdagen": 10},
     {"naam": "Carpaccio kaas", "dagen": 7, "bediening": false},
     {"naam": "Gefrituurde uitjes", "dagen": 20, "bediening": false},
     {"naam": "Zongedroogde tomaat", "dagen": 7, "bediening": false},
@@ -34,7 +34,7 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Tomatensoep", "dagen": 3, "bediening": false},
     {"naam": "Slagroom", "dagen": 2, "bediening": true},
     {"naam": "Soepballen", "dagen": 3, "bediening": false},
-    {"naam": "Schnitzel", "dagen": 1, "bediening": false},
+    {"naam": "Schnitzel", "dagen": 1, "bediening": false, "vriezerdagen": 10},
     {"naam": "Boerengarn.", "dagen": 4, "bediening": false},
     {"naam": "Pepersaus", "dagen": 3, "bediening": false},
     {"naam": "Champ roomsaus", "dagen": 3, "bediening": false},
@@ -95,12 +95,16 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Monchou bediening", "dagen": 1, "bediening": true},
     {"naam": "Munt", "dagen": 4, "bediening": true},
     {"naam": "Melk", "dagen": 3, "bediening": true},
-    {"naam": "Macarons", "dagen": 5, "bediening": true},
+    {"naam": "Macarons", "dagen": 5, "bediening": true, "vriezerdagen": 10},
     {"naam": "Pancakes", "dagen": 15, "bediening": false},
     {"naam": "Peterselie", "dagen": 1, "bediening": false},
     {"naam": "China rose", "dagen": 1, "bediening": false},
     {"naam": "Espresso Martini", "dagen": 30, "bediening": true},
     {"naam": "Pornstar Martini", "dagen": 30, "bediening": true},
+    {"naam": "Kletskoppen", "dagen": 15, "bediening": false},
+    {"naam": "Cheesecake", "dagen": 4, "bediening": false},
+    {"naam": "Kip", "dagen": 2, "bediening": false},
+    {"naam": "Fruit Coulis", "dagen": 5, "bediening": false}
   ];
   
   final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva"];
@@ -143,6 +147,8 @@ class _PrintPageState extends State<PrintPage> {
         'bediening': product['bediening'] ?? false,
         'parentIndex': null,
         'printCount': await getPrintCount(product['naam']),
+        'vriezerdagen': product['vriezerdagen'],
+        'isFrozen': false,
       });
     }
     
@@ -150,6 +156,7 @@ class _PrintPageState extends State<PrintPage> {
       printLijst.sort((a, b) => (b['printCount'] as int).compareTo(a['printCount'] as int));
     });
   }
+  
   String formatDutchDate(DateTime date) {
     const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
     const dutchMonths = [
@@ -308,6 +315,7 @@ class _PrintPageState extends State<PrintPage> {
                         insertIndex++;
                       }
                       
+                      final originalItem = printLijst[originalIndex];
                       printLijst.insert(insertIndex, {
                         'naam': naam,
                         'wegOpDatum': geselecteerdeDatum,
@@ -316,6 +324,8 @@ class _PrintPageState extends State<PrintPage> {
                         'isDuplicaat': true,
                         'aantal': 1,
                         'parentIndex': originalIndex,
+                        'vriezerdagen': originalItem['vriezerdagen'],
+                        'isFrozen': false,
                       });
                     });
                     Navigator.pop(context);
@@ -428,6 +438,8 @@ class _PrintPageState extends State<PrintPage> {
             'bediening': product['bediening'] ?? false,
             'parentIndex': null,
             'printCount': await getPrintCount(product['naam']),
+            'vriezerdagen': product['vriezerdagen'],
+            'isFrozen': false,
             });
            }
     if (value == false) {
@@ -443,6 +455,26 @@ class _PrintPageState extends State<PrintPage> {
       });
   }
 
+  void toggleFrozenState(int index) {
+    setState(() {
+      final item = printLijst[index];
+      final isFrozen = item['isFrozen'] as bool;
+      final vriezerdagen = item['vriezerdagen'];
+      final standaardDagen = item['standaardDagen'] as int;
+      
+      // Toggle frozen state
+      item['isFrozen'] = !isFrozen;
+      
+      // Update expiration date based on frozen state
+      if (!isFrozen && vriezerdagen != null) {
+        // Switching to frozen - use vriezerdagen
+        item['wegOpDatum'] = DateTime.now().add(Duration(days: vriezerdagen as int));
+      } else {
+        // Switching to not frozen - use standaardDagen
+        item['wegOpDatum'] = DateTime.now().add(Duration(days: standaardDagen));
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -629,6 +661,39 @@ class _PrintPageState extends State<PrintPage> {
                                       fontSize: 13,
                                     ),
                                   ),
+                                  // Freezer checkbox for products with vriezerdagen
+                                  if (item['vriezerdagen'] != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Row(
+                                        children: [
+                                          Transform.scale(
+                                            scale: 0.8,
+                                            child: Checkbox(
+                                              value: item['isFrozen'] ?? false,
+                                              onChanged: (value) => toggleFrozenState(index),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(3),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.ac_unit,
+                                            size: 16,
+                                            color: Colors.blue,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Vriezer (${item['vriezerdagen']} dagen)',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
