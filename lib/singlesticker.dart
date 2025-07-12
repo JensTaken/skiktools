@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 
+import 'package:skiktools/constants.dart';
+import 'package:skiktools/miseenplace.dart';
+
 class SingleStickerWidget extends StatefulWidget {
   const SingleStickerWidget({super.key});
 
@@ -13,15 +16,20 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
   final TextEditingController _nameController = TextEditingController();
   bool _isPrinting = false;
   DateTime _selectedDate = DateTime.now();
-  final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva", "Wytze"];
   String? _selectedEmployee;
- 
+
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
     medewerkers.shuffle();
     _selectedEmployee = medewerkers.first;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   String formatDutchDate(DateTime date) {
@@ -80,7 +88,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
         );
       });
     } else {
-      // Only update the date if time picker was canceled
+      
       setState(() {
         _selectedDate = DateTime(
           datum.year,
@@ -133,7 +141,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
             backgroundColor: Colors.green,
           ),
         );
-        // Clear the form after successful print
+        
         _nameController.clear();
         _selectedDate = DateTime.now();
       } else {
@@ -166,7 +174,40 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-             Text(
+            SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Mise en Place'),
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                        ),
+                        body: const MiseEnPlacePage(),
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ), 
+                child: const Text(
+                  "MEP Lijst",
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
                 'HACCP Sticker',
                 style: TextStyle(
                   fontSize: 24,
@@ -196,6 +237,10 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: _nameController,
+                      autofocus: true,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      enableInteractiveSelection: true,
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -210,16 +255,22 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
                           color: Colors.grey,
                         ),
                       ),
+                      onTap: () {
+                        SystemChannels.textInput.invokeMethod('TextInput.show');
+                      },
+                      onSubmitted: (String value) {
+                        SystemChannels.textInput.invokeMethod('TextInput.hide');
+                      },
                     ),
                     
-                    // Divider line
+                    
                     Container(
                       height: 1,
                       color: Colors.grey[300],
                       margin: const EdgeInsets.symmetric(vertical: 8),
                     ),
                     
-                    // "Weg op:" label
+                    
                     const Text(
                       'Weg op:',
                       style: TextStyle(
@@ -231,7 +282,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
                     
                     const SizedBox(height: 4),
                     
-                    // Date - clickable
+                    
                     InkWell(
                       onTap: () => _selectDate(context),
                       child: Container(
@@ -299,7 +350,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
                 ),
               ),
             const SizedBox(height: 10),
-            // Print button
+            
             SizedBox(
               height: 50,
               child: ElevatedButton.icon(
@@ -332,11 +383,5 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
   }
 }

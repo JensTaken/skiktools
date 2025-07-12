@@ -33,11 +33,10 @@ class MyApp extends StatelessWidget {
 class ResponsiveLayout extends StatelessWidget {
   const ResponsiveLayout({super.key});
 
-  
   final List<Widget> widgets = const [
     SingleStickerWidget(),
     TemperatureLoggerPage(),
-    PrintPage()
+    PrintPage(),
   ];
 
   @override
@@ -51,7 +50,6 @@ class ResponsiveLayout extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  
                   Expanded(
                     child: SizedBox(
                       height: constraints.maxHeight - 32, 
@@ -59,10 +57,9 @@ class ResponsiveLayout extends StatelessWidget {
                         child: Column(
                           children: [
                             SizedBox(
-                              height: constraints.maxHeight < 800 ? 390 : (constraints.maxHeight / 2) - 20, 
+                              height: constraints.maxHeight < 800 ? 440 : (constraints.maxHeight / 2) - 20, 
                               child: widgets[0],
                             ),
-                            SizedBox(height: 16),
                             SizedBox(
                               height: constraints.maxHeight < 800 ? 400 : (constraints.maxHeight / 2) - 40,  
                               child: widgets[1],
@@ -87,7 +84,7 @@ class ResponsiveLayout extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: SizedBox(
-                    height: 400, 
+                    height: 440, 
                     child: widgets[index],
                   ),
                 );
