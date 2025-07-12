@@ -80,7 +80,7 @@ class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
           ),
            const SizedBox(height: 10),
             
-            // Buttons
+            
             Row(
               children: [
                 Expanded(
@@ -118,18 +118,6 @@ class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
             ),
             
             const SizedBox(height: 10),
-            
-            // Result display
-            Text(
-              'Resultaat:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 12),
-            
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -161,7 +149,7 @@ class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
                 height: 50,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Copy the result to clipboard
+                    
                     Clipboard.setData(ClipboardData(text: _resultController.text));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 
 class PrintPage extends StatefulWidget {
   const PrintPage({super.key});
@@ -11,7 +9,6 @@ class PrintPage extends StatefulWidget {
 }
 
 class _PrintPageState extends State<PrintPage> {
-  static const String _printCountPrefix = 'print_count_';
   final List<Map<String, dynamic>> basisProducten = [
     {"naam": "Brood", "dagen": 1, "bediening": false},
     {"naam": "Burger brood", "dagen": 1, "bediening": false},
@@ -24,7 +21,7 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Oosters plateau", "dagen": 60, "bediening": false},
     {"naam": "Wakame", "dagen": 2, "bediening": false},
     {"naam": "Chilisaus", "dagen": 27, "bediening": false},
-    {"naam": "Carpaccio", "dagen": 2, "bediening": false, "vriezerdagen": 10},
+    {"naam": "Carpaccio", "dagen": 2, "bediening": false},
     {"naam": "Carpaccio kaas", "dagen": 7, "bediening": false},
     {"naam": "Gefrituurde uitjes", "dagen": 20, "bediening": false},
     {"naam": "Zongedroogde tomaat", "dagen": 7, "bediening": false},
@@ -34,7 +31,7 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Tomatensoep", "dagen": 3, "bediening": false},
     {"naam": "Slagroom", "dagen": 2, "bediening": true},
     {"naam": "Soepballen", "dagen": 3, "bediening": false},
-    {"naam": "Schnitzel", "dagen": 1, "bediening": false, "vriezerdagen": 10},
+    {"naam": "Schnitzel", "dagen": 1, "bediening": false},
     {"naam": "Boerengarn.", "dagen": 4, "bediening": false},
     {"naam": "Pepersaus", "dagen": 3, "bediening": false},
     {"naam": "Champ roomsaus", "dagen": 3, "bediening": false},
@@ -47,7 +44,6 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Sesamzaad", "dagen": 30, "bediening": false},
     {"naam": "Gambas", "dagen": 1, "bediening": false},
     {"naam": "Quiche", "dagen": 3, "bediening": false},
-    {"naam": "Gefr uitjes", "dagen": 30, "bediening": false},
     {"naam": "Crème fraîche", "dagen": 4, "bediening": false},
     {"naam": "Cheddar", "dagen": 7, "bediening": false},
     {"naam": "Spies 200", "dagen": 2, "bediening": false},
@@ -93,9 +89,9 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Aardbeisaus", "dagen": 29, "bediening": true},
     {"naam": "Karamelsaus", "dagen": 39, "bediening": true},
     {"naam": "Monchou bediening", "dagen": 1, "bediening": true},
-    {"naam": "Munt", "dagen": 4, "bediening": true},
+    {"naam": "Munt", "dagen": 2, "bediening": true},
     {"naam": "Melk", "dagen": 3, "bediening": true},
-    {"naam": "Macarons", "dagen": 5, "bediening": true, "vriezerdagen": 10},
+    {"naam": "Macarons", "dagen": 5, "bediening": true},
     {"naam": "Pancakes", "dagen": 15, "bediening": false},
     {"naam": "Peterselie", "dagen": 1, "bediening": false},
     {"naam": "China rose", "dagen": 1, "bediening": false},
@@ -103,40 +99,28 @@ class _PrintPageState extends State<PrintPage> {
     {"naam": "Pornstar Martini", "dagen": 30, "bediening": true},
     {"naam": "Kletskoppen", "dagen": 15, "bediening": false},
     {"naam": "Cheesecake", "dagen": 4, "bediening": false},
-    {"naam": "Kip", "dagen": 2, "bediening": false},
-    {"naam": "Fruit Coulis", "dagen": 5, "bediening": false}
+    {"naam": "Kip gebakken", "dagen": 2, "bediening": false},
+    {"naam": "Fruit Coulis", "dagen": 5, "bediening": false},
+    {"naam": "Gember", "dagen": 2, "bediening": true},
+    {"naam": "Praline", "dagen": 4, "bediening": true},
+    {"naam": "Passievrucht", "dagen": 3, "bediening": true}
   ];
   
-  final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva"];
+  final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva", "Wytze"];
   String geselecteerdeMedewerker = "";
   final List<Map<String, dynamic>> printLijst = [];
   bool isPrinting = false;
   bool? bediening = false;
 
-  Future<int> getPrintCount(String productName) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('$_printCountPrefix$productName') ?? 0;
-  }
-
-  Future<void> incrementPrintCount(String productName) async {
-    final item = printLijst.firstWhere((item) => item['naam'] == productName);
-    if (item != {}) {
-      item['printCount'] = (item['printCount'] as int) + 1;
-    } 
-    final prefs = await SharedPreferences.getInstance();
-    final currentCount = prefs.getInt('$_printCountPrefix$productName') ?? 0;
-    await prefs.setInt('$_printCountPrefix$productName', currentCount + 1);
-  }
 
   @override
   void initState() {
     super.initState();
-    sortOnPrintcount();
     medewerkers.shuffle();
+    loadProducten();
     geselecteerdeMedewerker = medewerkers.first;
   }
-
-  Future<void> sortOnPrintcount() async{
+  void loadProducten() {
     for (var product in basisProducten) {
       printLijst.add({
         'naam': product['naam'],
@@ -146,17 +130,11 @@ class _PrintPageState extends State<PrintPage> {
         'aantal': 1,
         'bediening': product['bediening'] ?? false,
         'parentIndex': null,
-        'printCount': await getPrintCount(product['naam']),
-        'vriezerdagen': product['vriezerdagen'],
-        'isFrozen': false,
       });
     }
-    
-    setState(() {
-      printLijst.sort((a, b) => (b['printCount'] as int).compareTo(a['printCount'] as int));
-    });
+    setState(() {});
+    printLijst.sort((a, b) => a['naam'].toLowerCase().compareTo(b['naam'].toLowerCase()));
   }
-  
   String formatDutchDate(DateTime date) {
     const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
     const dutchMonths = [
@@ -178,9 +156,9 @@ class _PrintPageState extends State<PrintPage> {
     final String wegOpTekst = "Weg op:";
 
     final result = await Process.run(
-      'python',
+      r'C:\Users\Horeko\AppData\Local\Programs\Python\Python313\python.exe',
       [
-        'print.py',
+        r'C:\Program Files\Skiktools\print.py',
         naam,
         formattedDate,
         wegOpTekst,
@@ -216,7 +194,6 @@ class _PrintPageState extends State<PrintPage> {
       for (var item in gevinkteItems) {
         final aantal = item['aantal'] as int;
         for (int i = 0; i < aantal; i++) {
-          await incrementPrintCount(item['naam']);
           var code = await printLabel(item['naam'], item['wegOpDatum'], geselecteerdeMedewerker);
           if (code != 0) {
             throw Exception('Kon ${item['naam']} niet printen: $code');
@@ -231,7 +208,6 @@ class _PrintPageState extends State<PrintPage> {
             item['gevinkt'] = false;
           }
         }
-        printLijst.sort((a, b) => (b['printCount'] as int).compareTo(a['printCount'] as int));
       });
   
       ScaffoldMessenger.of(context).showSnackBar(
@@ -308,15 +284,13 @@ class _PrintPageState extends State<PrintPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      // Find the position to insert (right after the original item and its existing duplicates)
+                      
                       int insertIndex = originalIndex + 1;
                       while (insertIndex < printLijst.length && 
                              printLijst[insertIndex]['parentIndex'] == originalIndex) {
                         insertIndex++;
                       }
-                      
-                      final originalItem = printLijst[originalIndex];
-                      printLijst.insert(insertIndex, {
+                      printLijst.insert(insertIndex-1, {
                         'naam': naam,
                         'wegOpDatum': geselecteerdeDatum,
                         'gevinkt': false,
@@ -324,8 +298,6 @@ class _PrintPageState extends State<PrintPage> {
                         'isDuplicaat': true,
                         'aantal': 1,
                         'parentIndex': originalIndex,
-                        'vriezerdagen': originalItem['vriezerdagen'],
-                        'isFrozen': false,
                       });
                     });
                     Navigator.pop(context);
@@ -428,51 +400,62 @@ class _PrintPageState extends State<PrintPage> {
   }
 
   Future<void> filterBediening(bool? value) async{
-     for (var product in basisProducten) {
-          printLijst.add({
-            'naam': product['naam'],
-            'wegOpDatum': DateTime.now().add(Duration(days: product['dagen'])),
-            'gevinkt': false,
-            'standaardDagen': product['dagen'],
-            'aantal': 1,
-            'bediening': product['bediening'] ?? false,
-            'parentIndex': null,
-            'printCount': await getPrintCount(product['naam']),
-            'vriezerdagen': product['vriezerdagen'],
-            'isFrozen': false,
-            });
-           }
-    if (value == false) {
-      sortOnPrintcount();
-    }
-    setState(() {
-        bediening = value;
-        if (value == true) {
-          printLijst.retainWhere((item) => item['bediening'] == true);
-        } else {
-          printLijst.clear();
-        }
-      });
-  }
-
-  void toggleFrozenState(int index) {
-    setState(() {
-      final item = printLijst[index];
-      final isFrozen = item['isFrozen'] as bool;
-      final vriezerdagen = item['vriezerdagen'];
-      final standaardDagen = item['standaardDagen'] as int;
-      
-      // Toggle frozen state
-      item['isFrozen'] = !isFrozen;
-      
-      // Update expiration date based on frozen state
-      if (!isFrozen && vriezerdagen != null) {
-        // Switching to frozen - use vriezerdagen
-        item['wegOpDatum'] = DateTime.now().add(Duration(days: vriezerdagen as int));
-      } else {
-        // Switching to not frozen - use standaardDagen
-        item['wegOpDatum'] = DateTime.now().add(Duration(days: standaardDagen));
+    
+    Map<String, Map<String, dynamic>> currentState = {};
+    List<Map<String, dynamic>> duplicates = [];
+    
+    for (var item in printLijst) {
+      if (item['isDuplicaat'] == true) {
+        duplicates.add(Map<String, dynamic>.from(item));
+      } else {  
+        currentState[item['naam']] = {
+          'gevinkt': item['gevinkt'],
+          'aantal': item['aantal'],
+        };
       }
+    }
+    printLijst.clear();
+    for (var product in basisProducten) {
+      String naam = product['naam'];
+      Map<String, dynamic> savedState = currentState[naam] ?? {};
+      
+      printLijst.add({
+        'naam': naam,
+        'wegOpDatum': DateTime.now().add(Duration(days: product['dagen'])),
+        'gevinkt': savedState['gevinkt'] ?? false,
+        'standaardDagen': product['dagen'],
+        'aantal': savedState['aantal'] ?? 1,
+        'bediening': product['bediening'] ?? false,
+        'parentIndex': null,
+      });
+    }
+    
+    
+    for (var duplicate in duplicates) {
+      int parentIndex = -1;
+      for (int i = 0; i < printLijst.length; i++) {
+        if (printLijst[i]['naam'] == duplicate['naam'] && printLijst[i]['isDuplicaat'] != true) {
+          parentIndex = i;
+          break;
+        }
+      }
+      if (parentIndex != -1) {
+        int insertIndex = parentIndex + 1;
+        while (insertIndex < printLijst.length && 
+               printLijst[insertIndex]['parentIndex'] == parentIndex) {
+          insertIndex++;
+        }
+        duplicate['parentIndex'] = parentIndex;
+        printLijst.insert(insertIndex, duplicate);
+      }
+    }
+    
+    setState(() {
+      bediening = value;
+      if (value == true) {
+        printLijst.retainWhere((item) => item['bediening'] == true);
+      }
+      printLijst.sort((a, b) => a['naam'].toLowerCase().compareTo(b['naam'].toLowerCase()));
     });
   }
 
@@ -493,7 +476,7 @@ class _PrintPageState extends State<PrintPage> {
               ),
             ),
             SizedBox(height: 10),
-            // Employee selector
+            
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -523,6 +506,8 @@ class _PrintPageState extends State<PrintPage> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       value: geselecteerdeMedewerker,
+                      isExpanded: true,
+                      menuMaxHeight: 200,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(
@@ -575,7 +560,7 @@ class _PrintPageState extends State<PrintPage> {
             ),
             const SizedBox(height: 16),
             
-            // Product list
+            
             Expanded(
               child: ListView.builder(
                 itemCount: printLijst.length,
@@ -599,7 +584,7 @@ class _PrintPageState extends State<PrintPage> {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            // Checkbox
+                            
                             Transform.scale(
                               scale: 1.2,
                               child: Checkbox(
@@ -617,7 +602,7 @@ class _PrintPageState extends State<PrintPage> {
                             
                             const SizedBox(width: 12),
                             
-                            // Product info
+                            
                             Expanded(
                               flex: 3,
                               child: Column(
@@ -634,7 +619,7 @@ class _PrintPageState extends State<PrintPage> {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: const Text(
-                                            'ANDERE DATUM',
+                                            'ANDERE \nDATUM',
                                             style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
@@ -661,55 +646,22 @@ class _PrintPageState extends State<PrintPage> {
                                       fontSize: 13,
                                     ),
                                   ),
-                                  // Freezer checkbox for products with vriezerdagen
-                                  if (item['vriezerdagen'] != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Row(
-                                        children: [
-                                          Transform.scale(
-                                            scale: 0.8,
-                                            child: Checkbox(
-                                              value: item['isFrozen'] ?? false,
-                                              onChanged: (value) => toggleFrozenState(index),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(3),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.ac_unit,
-                                            size: 16,
-                                            color: Colors.blue,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Vriezer (${item['vriezerdagen']} dagen)',
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
                                 ],
                               ),
                             ),
                             
                             const SizedBox(width: 12),
                             
-                            // Counter
+                            
                             buildCounterWidget(index, aantal),
                             
                             const SizedBox(width: 12),
                             
-                            // Action buttons
+                            
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Add duplicate button
+                                
                                 IconButton(
                                   onPressed: () => voegDuplicaatToe(
                                     item['naam'], 
@@ -721,7 +673,7 @@ class _PrintPageState extends State<PrintPage> {
                                   tooltip: 'Extra toevoegen',
                                 ),
                                 
-                                // Delete button (only for duplicates)
+                                
                                 if (isDuplicaat)
                                   IconButton(
                                     onPressed: () {

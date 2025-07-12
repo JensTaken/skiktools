@@ -11,14 +11,17 @@ class SingleStickerWidget extends StatefulWidget {
 
 class _SingleStickerWidgetState extends State<SingleStickerWidget> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _employeeController = TextEditingController();
   bool _isPrinting = false;
   DateTime _selectedDate = DateTime.now();
-
+  final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva", "Wytze"];
+  String? _selectedEmployee;
+ 
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
+    medewerkers.shuffle();
+    _selectedEmployee = medewerkers.first;
   }
 
   String formatDutchDate(DateTime date) {
@@ -40,10 +43,10 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
   Future<int> printLabel(String naam, DateTime wegOpDatum, String medewerker) async {
     final String formattedDate = formatDutchDate(wegOpDatum);
     final String wegOpTekst = "Weg op:";
-    final result = await Process.run(
-      'python',
+     final result = await Process.run(
+      r'C:\Users\Horeko\AppData\Local\Programs\Python\Python313\python.exe',
       [
-        'print.py',
+        r'C:\Program Files\Skiktools\print.py',
         naam,
         formattedDate,
         wegOpTekst,
@@ -102,10 +105,10 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
       return;
     }
 
-    if (_employeeController.text.trim().isEmpty) {
+    if (_selectedEmployee == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Vul eerst een medewerker in'),
+          content: Text('Selecteer eerst een medewerker'),
           backgroundColor: Colors.red,
         ),
       );
@@ -120,7 +123,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
       final int exitCode = await printLabel(
         _nameController.text.trim(),
         _selectedDate,
-        _employeeController.text.trim(),
+        _selectedEmployee!,
       );
 
       if (exitCode == 0) {
@@ -157,156 +160,176 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-           Text(
-              'HACCP Sticker',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+    return SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+             Text(
+                'HACCP Sticker',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-            ),
-          const SizedBox(height: 10),
-          Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.grey[400]!, width: 2),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 40,),
-                  TextField(
-                    controller: _nameController,
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Productnaam...',
-                      hintStyle: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  
-                  // Divider line
-                  Container(
-                    height: 1,
-                    color: Colors.grey[300],
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  
-                  // "Weg op:" label
-                  const Text(
-                    'Weg op:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 4),
-                  
-                  // Date - clickable
-                  InkWell(
-                    onTap: () => _selectDate(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.transparent),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            formatDutchDate(_selectedDate),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: Colors.grey[600],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                 
-                  TextField(
-                    controller: _employeeController,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Medewerker...',
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 10),
-          // Print button
-          SizedBox(
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _isPrinting ? null : _printSticker,
-              icon: _isPrinting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.print, size: 18),
-              label: Text(
-                _isPrinting ? 'Printen...' : 'Print Sticker',
-                style: const TextStyle(fontSize: 14),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isPrinting ? Colors.grey : Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
+            const SizedBox(height: 10),
+            Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey[400]!, width: 2),
                   borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _nameController,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Productnaam...',
+                        hintStyle: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    
+                    // Divider line
+                    Container(
+                      height: 1,
+                      color: Colors.grey[300],
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    
+                    // "Weg op:" label
+                    const Text(
+                      'Weg op:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 4),
+                    
+                    // Date - clickable
+                    InkWell(
+                      onTap: () => _selectDate(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.transparent),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              formatDutchDate(_selectedDate),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedEmployee,
+                        isExpanded: true,
+                        menuMaxHeight: 200,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          hintText: 'Selecteer medewerker...',
+                          hintStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                       
+                        items: medewerkers.map((String employee) {
+                          return DropdownMenuItem<String>(
+                            value: employee,
+                            child: Text(employee),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedEmployee = newValue;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 10),
+            // Print button
+            SizedBox(
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: _isPrinting ? null : _printSticker,
+                icon: _isPrinting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.print, size: 18),
+                label: Text(
+                  _isPrinting ? 'Printen...' : 'Print Sticker',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isPrinting ? Colors.grey : Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -314,7 +337,6 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
   @override
   void dispose() {
     _nameController.dispose();
-    _employeeController.dispose();
     super.dispose();
   }
 }

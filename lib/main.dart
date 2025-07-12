@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Skik Tools',
       debugShowCheckedModeBanner: false,
       supportedLocales: const [
         Locale('en', 'US'),
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
 class ResponsiveLayout extends StatelessWidget {
   const ResponsiveLayout({super.key});
 
-  // Define your three widgets here (now only using 3 widgets)
+  
   final List<Widget> widgets = const [
     SingleStickerWidget(),
     TemperatureLoggerPage(),
@@ -45,28 +45,26 @@ class ResponsiveLayout extends StatelessWidget {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Breakpoint for switching between grid and list
-          // You can adjust this value based on your needs
           if (constraints.maxWidth > 870) {
-            // Grid layout for larger screens - 2 widgets left, 1 large widget right
+            
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  // Left column: 2 widgets stacked with fixed height and scrollable
+                  
                   Expanded(
                     child: SizedBox(
-                      height: constraints.maxHeight - 32, // Full height minus padding
+                      height: constraints.maxHeight - 32, 
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
                             SizedBox(
-                              height: constraints.maxHeight < 800 ? 390 : (constraints.maxHeight / 2) - 20, // Fixed height for first widget
+                              height: constraints.maxHeight < 800 ? 390 : (constraints.maxHeight / 2) - 20, 
                               child: widgets[0],
                             ),
                             SizedBox(height: 16),
                             SizedBox(
-                              height: constraints.maxHeight < 800 ? 400 : (constraints.maxHeight / 2) - 40,  // Fixed height for second widget
+                              height: constraints.maxHeight < 800 ? 400 : (constraints.maxHeight / 2) - 40,  
                               child: widgets[1],
                             ),
                           ],
@@ -75,13 +73,13 @@ class ResponsiveLayout extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 16),
-                  // Right column: 1 large widget
+                  
                   Expanded(child: widgets[2]),
                 ],
               ),
             );
           } else {
-            // ListView for smaller screens
+            
             return ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemCount: widgets.length,
@@ -89,7 +87,7 @@ class ResponsiveLayout extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: SizedBox(
-                    height: 400, // Give each widget a fixed height
+                    height: 400, 
                     child: widgets[index],
                   ),
                 );
