@@ -26,7 +26,6 @@ class _PrintPageState extends State<PrintPage> {
   }
 
   void extractCategorieen() {
-    // Collect unique categories from basisProducten
     final set = <dynamic>{};
     for (var product in basisProducten) {
       if (product['categorie'] != null) set.add(product['categorie']);
