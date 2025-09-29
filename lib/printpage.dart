@@ -400,50 +400,57 @@ class _PrintPageState extends State<PrintPage> {
           
           // Category slider
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Category slider
-              Expanded(
-                child: SizedBox(
+              // Category slider (no Expanded/SizedBox, just flexible width)
+              Flexible(
+                child: Container(
                   height: 56,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: categorieen.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, idx) {
-                      final cat = categorieen[idx];
-                      final isSelected = cat == selectedCategorie;
-                      return ChoiceChip(
-                        label: Text(
-                          cat == null ? "Alle" : cat.toString(),
-                          style: TextStyle(
-                            fontSize: 18,
+                  alignment: Alignment.centerLeft,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: categorieen.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, idx) {
+                        final cat = categorieen[idx];
+                        final isSelected = cat == selectedCategorie;
+                        return ChoiceChip(
+                          label: Text(
+                            cat == null ? "Alle" : cat.toString(),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setState(() {
+                              selectedCategorie = cat;
+                            });
+                          },
+                          selectedColor: Colors.black,
+                          backgroundColor: Colors.grey[200],
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 2,
+                          ),
+                          labelStyle: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.w700,
                           ),
-                        ),
-                        selected: isSelected,
-                        onSelected: (_) {
-                          setState(() {
-                            selectedCategorie = cat;
-                          });
-                        },
-                        selectedColor: Colors.black,
-                        backgroundColor: Colors.grey[200],
-                        side: BorderSide(
-                          color: Colors.black,
-                          width: 2,
-                        ),
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: Colors.black, width: 2),
-                        ),
-                        showCheckmark: false,
-                      );
-                    },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(color: Colors.black, width: 2),
+                          ),
+                          showCheckmark: false,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -453,12 +460,12 @@ class _PrintPageState extends State<PrintPage> {
                 height: 40,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                 setState(() {
-                   selectedCategorie = null;
-                   for (var item in printLijst) {
-                     item['gevinkt'] = false;
-                   }
-                 });
+                    setState(() {
+                      selectedCategorie = null;
+                      for (var item in printLijst) {
+                        item['gevinkt'] = false;
+                      }
+                    });
                   },
                   icon: const Icon(Icons.clear, size: 18),
                   label: const Text("Deselecteer"),
