@@ -13,15 +13,16 @@ class TemperatureLoggerPage extends StatefulWidget {
 class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
   final TextEditingController _resultController = TextEditingController();
   final Random _random = Random();
-  
+  bool show = false;
+
   static const List<String> productenBainMarie = [
-    "Tomatensoep", "Pepersaus", "Champignonroomsaus", "Gegratineerde Champignons",
-    "Soepballen", "Spinaziequiche", "Puree"
+    "Tomatensoep", "Pepersaus", "Champignonroomsaus", "Soep van de dag",
+    "Soepballen", "Puree"
   ];
   
   static const List<String> productenVriezer = [
-    "Pulled chicken", "Soepballen", "Schnitzel", "Quiche", "Spinaziequiche",
-    "Zalm", "Ossenhaas Spies", "Gamba's"
+    "Pulled chicken", "Soepballen", "Schnitzel", "Kip", "Spare ribs",
+    "Zalm", "Gamba's"
   ];
 
   void genereer(String type) {
@@ -58,121 +59,124 @@ class _TemperatureLoggerPageState extends State<TemperatureLoggerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child:  Text(
-              'Koeldingetjes',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            
-              textAlign: TextAlign.center,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+          child: Align(
+            alignment: Alignment.center,
+            child: IconButton(
+              icon: Icon(Icons.question_mark),
+              onPressed: () {
+                setState(() {
+                  show = !show;
+                });
+              },
+              
             ),
-          
           ),
-           const SizedBox(height: 10),
-            
-            
-            Row(
+        ),
+        Visibility(
+          visible: show,
+          child: SizedBox(height: 400,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => genereer('vriezer'),
-                    icon: const Icon(Icons.ac_unit),
-                    label: const Text('Vriezer\nMeting'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[600],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => genereer('vriezer'),
+                        icon: const Icon(Icons.ac_unit),
+                        label: const Text('Vriezer\nMeting'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => genereer('bain-marie'),
+                        icon: const Icon(Icons.whatshot),
+                        label: const Text('Bain-Marie\nMeting'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey[50],
+                    ),
+                    child: TextField(
+                      controller: _resultController,
+                      maxLines: null,
+                      expands: true,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'monospace',
+                      ),
+                      decoration: const InputDecoration(
+                        contentPadding: EdgeInsets.all(16),
+                        border: InputBorder.none,
+                        hintText: 'Klik op een knop om een temperatuurmeting te genereren...',
+                      ),
+                      readOnly: true,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => genereer('bain-marie'),
-                    icon: const Icon(Icons.whatshot),
-                    label: const Text('Bain-Marie\nMeting'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[600],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 20),
+                if (_resultController.text.isNotEmpty)
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: _resultController.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Tekst gekopieerd naar klembord'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Kopieer naar Klembord'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
-            
-            const SizedBox(height: 10),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey[50],
-                ),
-                child: TextField(
-                  controller: _resultController,
-                  maxLines: null,
-                  expands: true,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontFamily: 'monospace',
-                  ),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.all(16),
-                    border: InputBorder.none,
-                    hintText: 'Klik op een knop om een temperatuurmeting te genereren...',
-                  ),
-                  readOnly: true,
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            if (_resultController.text.isNotEmpty)
-              SizedBox(
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    
-                    Clipboard.setData(ClipboardData(text: _resultController.text));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tekst gekopieerd naar klembord'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.copy),
-                  label: const Text('Kopieer naar Klembord'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+          ),)
         ),
-      );
+      ],
+    );
   }
 
   @override

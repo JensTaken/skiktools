@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
-
 import 'package:skiktools/constants.dart';
-import 'package:skiktools/miseenplace.dart';
 
 class SingleStickerWidget extends StatefulWidget {
   const SingleStickerWidget({super.key});
@@ -174,48 +172,6 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Mise en Place'),
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                        ),
-                        body: const MiseEnPlacePage(),
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ), 
-                child: const Text(
-                  "MEP Lijst",
-                  style: TextStyle(fontSize: 14),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-                'HACCP Sticker',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            const SizedBox(height: 10),
             Container(
                 decoration: BoxDecoration(
                   color: Colors.white,

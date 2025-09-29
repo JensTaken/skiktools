@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:skiktools/printpage.dart';
 import 'package:skiktools/randomgen.dart';
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
 
 class ResponsiveLayout extends StatelessWidget {
   const ResponsiveLayout({super.key});
-
+  
   final List<Widget> widgets = const [
     SingleStickerWidget(),
     TemperatureLoggerPage(),
@@ -45,7 +46,6 @@ class ResponsiveLayout extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 870) {
-            
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -53,15 +53,16 @@ class ResponsiveLayout extends StatelessWidget {
                   Expanded(
                     child: SizedBox(
                       height: constraints.maxHeight - 32, 
+                
                       child: SingleChildScrollView(
+                        
                         child: Column(
                           children: [
                             SizedBox(
-                              height: constraints.maxHeight < 800 ? 440 : (constraints.maxHeight / 2) - 20, 
-                              child: widgets[0],
+                              height: 340, child: widgets[0],
                             ),
                             SizedBox(
-                              height: constraints.maxHeight < 800 ? 400 : (constraints.maxHeight / 2) - 40,  
+                              height: 500,  
                               child: widgets[1],
                             ),
                           ],
@@ -70,13 +71,11 @@ class ResponsiveLayout extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 16),
-                  
                   Expanded(child: widgets[2]),
                 ],
               ),
             );
           } else {
-            
             return ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemCount: widgets.length,
@@ -84,7 +83,7 @@ class ResponsiveLayout extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: SizedBox(
-                    height: 440, 
+                    height: index == 0 ? 340 : (index == 1 ? 500 : 440), 
                     child: widgets[index],
                   ),
                 );

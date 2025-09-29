@@ -1,5 +1,5 @@
 final List<Map<String, dynamic>> basisProducten = [
-    {"naam": "Brood", "dagen": 1, "bediening": false},
+    {"naam": "Brood", "dagen": 1, "bediening": false, "categorie": "Lunch"},
     {"naam": "Burger brood", "dagen": 1, "bediening": false},
     {"naam": "Knoflooksaus", "dagen": 6, "bediening": false},
     {"naam": "Kruidenboter", "dagen": 10, "bediening": false},
@@ -94,5 +94,5 @@ final List<Map<String, dynamic>> basisProducten = [
     {"naam": "Praline", "dagen": 4, "bediening": true},
     {"naam": "Passievrucht", "dagen": 3, "bediening": true}
   ];
-  
-final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Bediening", "Keuken", "Mik", "Marit", "Timo", "Rolf", "Daan", "Hidde", "Stijn", "Eva", "Wytze"];
+
+final List<String> medewerkers = ["Jens", "Isa", "Tyan", "Lisa","Mik", "Marit", "Timo", "Hidde", "Jop", "Eva", "Wytze", "Bediening"];
