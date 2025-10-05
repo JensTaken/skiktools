@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
-import 'package:skiktools/constants.dart';
 
 class SingleStickerWidget extends StatefulWidget {
-  const SingleStickerWidget({super.key});
+  final List<String> medewerkers;
+  const SingleStickerWidget({super.key, required this.medewerkers});
 
   @override
   State<SingleStickerWidget> createState() => _SingleStickerWidgetState();
@@ -19,9 +19,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now();
-    medewerkers.shuffle();
-    _selectedEmployee = medewerkers.first;
+    _selectedEmployee = widget.medewerkers.first;
   }
 
   @override
@@ -61,6 +59,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
     );
     return result.exitCode;
   }
+  
   Future<void> _selectDate(BuildContext context) async {
   final datum = await showDatePicker(
     context: context,
@@ -289,7 +288,7 @@ class _SingleStickerWidgetState extends State<SingleStickerWidget> {
                           ),
                         ),
                        
-                        items: medewerkers.map((String employee) {
+                        items: widget.medewerkers.map((String employee) {
                           return DropdownMenuItem<String>(
                             value: employee,
                             child: Text(employee),

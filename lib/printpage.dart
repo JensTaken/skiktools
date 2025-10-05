@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:skiktools/constants.dart';
+
 
 class PrintPage extends StatefulWidget {
-  const PrintPage({super.key});
+  final List<String> medewerkers;
+  final List<dynamic> producten;
+  const PrintPage({super.key, required this.medewerkers, required this.producten});
 
   @override
   State<PrintPage> createState() => _PrintPageState();
@@ -15,61 +17,64 @@ class _PrintPageState extends State<PrintPage> {
   bool isPrinting = false;
   dynamic selectedCategorie;
   List<dynamic> categorieen = [];
+  final set = <dynamic>{};
 
   @override
   void initState() {
     super.initState();
-    medewerkers.shuffle();
     loadProducten();
-    geselecteerdeMedewerker = medewerkers.first;
-    extractCategorieen();
-  }
-
-  void extractCategorieen() {
-    final set = <dynamic>{};
-    for (var product in basisProducten) {
-      if (product['categorie'] != null) set.add(product['categorie']);
-    }
-    categorieen = set.toList();
-    categorieen.sort((a, b) => a.toString().compareTo(b.toString()));
-    categorieen.insert(0, null); // For "Alle"
-    selectedCategorie = null;
   }
 
   void loadProducten() {
-    for (var product in basisProducten) {
-      printLijst.add({
-        'naam': product['naam'],
-        'wegOpDatum': DateTime.now().add(Duration(days: product['dagen'])),
-        'gevinkt': false,
-        'standaardDagen': product['dagen'],
-        'aantal': 1,
-        'bediening': product['bediening'] ?? false,
-        'parentIndex': null,
-        'categorie': product['categorie'], // Add category
-      });
+    geselecteerdeMedewerker = widget.medewerkers.first;
+
+    for (var product in widget.producten) {
+      // Support both String and List for categorie
+      List<dynamic> cats = [];
+      if (product['categorie'] is String) {
+        cats = [product['categorie']];
+      } else if (product['categorie'] is List) {
+        cats = product['categorie'];
+      }
+
+      if (cats.isNotEmpty &&
+          product['dagen'] != null &&
+          product['dagen'] is int &&
+          product['naam'] is String &&
+          product['naam'] != null) {
+        printLijst.add({
+          'naam': product['naam'],
+          'wegOpDatum': DateTime.now().add(Duration(days: product['dagen'])),
+          'gevinkt': false,
+          'standaardDagen': product['dagen'],
+          'aantal': 1,
+          'parentIndex': null,
+          'categorie': cats, // <-- always a list now
+        });
+        set.addAll(cats);
+      }
     }
-    setState(() {});
+
+    categorieen = set.toList();
+    categorieen.sort((a, b) => a.toString().compareTo(b.toString()));
+    categorieen.insert(0, null);
+    selectedCategorie = null;
     printLijst.sort((a, b) => a['naam'].toLowerCase().compareTo(b['naam'].toLowerCase()));
+    setState(() {});
   }
+
   String formatDutchDate(DateTime date) {
     const dutchDays = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
-    const dutchMonths = [
-      'Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'
-    ];
-    
+    const dutchMonths = ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
     final dayName = dutchDays[date.weekday - 1];
     final day = date.day.toString().padLeft(2, '0');
     final month = dutchMonths[date.month - 1];
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
-    
     return '$dayName $day $month $hour:$minute';
   }
 
   Future<int> printLabel(String naam, DateTime wegOpDatum, String medewerker) async {
-    await Future.delayed(const Duration(milliseconds: 100));
     final String formattedDate = formatDutchDate(wegOpDatum);
     final String wegOpTekst = "Weg op:";
 
@@ -92,17 +97,13 @@ class _PrintPageState extends State<PrintPage> {
       isPrinting = true;
     });
     final gevinkteItems = printLijst.where((item) {
-      // Filter by category if selected
-      if (selectedCategorie != null) {
-        return item['gevinkt'] == true && item['categorie'] == selectedCategorie;
-      }
       return item['gevinkt'] == true;
     }).toList();
-    
+    print(gevinkteItems.length);
     if (gevinkteItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Ben je kaulo dom ofz? Selecteer eerst items om te printen daggoe!'),
+          content: Text('Je werkt sowieso in de bediening.... Selecteer eerst wat je wilt printen!'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -115,6 +116,7 @@ class _PrintPageState extends State<PrintPage> {
     int totalLabels = 0;
  
     try {
+      print(gevinkteItems.length);
       for (var item in gevinkteItems) {
         final aantal = item['aantal'] as int;
         for (int i = 0; i < aantal; i++) {
@@ -208,7 +210,6 @@ class _PrintPageState extends State<PrintPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      
                       int insertIndex = originalIndex + 1;
                       while (insertIndex < printLijst.length && 
                              printLijst[insertIndex]['parentIndex'] == originalIndex) {
@@ -326,10 +327,12 @@ class _PrintPageState extends State<PrintPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Filtered list by category
     final filteredList = selectedCategorie == null
         ? printLijst
-        : printLijst.where((item) => item['categorie'] == selectedCategorie).toList();
+        : printLijst.where((item) {
+            final cats = item['categorie'] as List;
+            return cats.contains(selectedCategorie);
+          }).toList();
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -377,7 +380,7 @@ class _PrintPageState extends State<PrintPage> {
                       filled: true,
                       fillColor: Colors.grey[50],
                     ),
-                    items: medewerkers
+                    items: widget.medewerkers
                         .map((m) => DropdownMenuItem(
                               value: m,
                               child: Text(m),
@@ -453,35 +456,7 @@ class _PrintPageState extends State<PrintPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              // Deselect all button
-              SizedBox(
-                height: 40,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      selectedCategorie = null;
-                      for (var item in printLijst) {
-                        item['gevinkt'] = false;
-                      }
-                    });
-                  },
-                  icon: const Icon(Icons.clear, size: 18),
-                  label: const Text("Deselecteer"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: Colors.black, width: 2),
-                    ),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
+              ],
           ),
           const SizedBox(height: 8),
           
@@ -515,8 +490,13 @@ class _PrintPageState extends State<PrintPage> {
                               value: item['gevinkt'],
                               onChanged: (value) {
                                 setState(() {
-                                  // Find the item in printLijst and update
-                                  final idx = printLijst.indexOf(item);
+                                  // Find the item in printLijst by naam and categorie and update
+                                  final idx = printLijst.indexWhere((e) =>
+                                    e['naam'] == item['naam'] &&
+                                    e['categorie'] == item['categorie'] &&
+                                    (e['isDuplicaat'] ?? false) == (item['isDuplicaat'] ?? false) &&
+                                    (e['parentIndex'] ?? -1) == (item['parentIndex'] ?? -1)
+                                  );
                                   if (idx != -1) printLijst[idx]['gevinkt'] = value ?? false;
                                 });
                               },
@@ -572,6 +552,7 @@ class _PrintPageState extends State<PrintPage> {
                                     fontSize: 13,
                                   ),
                                 ),
+                              
                               ],
                             ),
                           ),
